@@ -40,12 +40,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtUtil = jwtUtil;
     }
 
-    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationManager authenticationManager1, JWTUtil jwtUtil) {
-        super(authenticationManager);
-        this.authenticationManager = authenticationManager1;
-        this.jwtUtil = jwtUtil;
-    }
-
 
 
     /**
