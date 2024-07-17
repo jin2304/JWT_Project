@@ -2,6 +2,7 @@ package com.example.jwt_project.jwt;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -17,6 +18,8 @@ import java.util.Date;
  * 코드 작성일: 2024.07.17 ~ 2024.07.17
  *
  */
+
+@Component
  public class JWTUtil {
 
     private SecretKey secretKey;
