@@ -14,8 +14,8 @@ import java.util.Date;
  * JWTUti 클래스
  * 코드 작성자: 서진영(jin2304)
  * 코드 설명: JWTUtil 클래스는 JWT(JSON Web Token)의 생성, 검증, 파싱을 위한 유틸리티 메서드를 제공함.
- * 코드 주요 기능: JWT 생성, JWT 검증(사용자 이름 추출 검증, 사용자 역할 추출 검증, 만료 여부 검증)
- * 코드 작성일: 2024.07.17 ~ 2024.07.17
+ * 코드 주요 기능: JWT 생성, JWT 검증(사용자 이름 추출 검증, 사용자 역할 추출 검증, 만료 여부 검증, access 및 refresh 토큰 여부 검증)
+ * 코드 작성일: 2024.07.17 ~ 2024.07.20
  *
  */
 
@@ -34,8 +34,9 @@ import java.util.Date;
     /**
      *  JWT 생성
      */
-    public String createJwt(String username, String role, Long expiredMs){
+    public String createJwt(String category, String username, String role, Long expiredMs){
         return Jwts.builder()
+                .claim("category", category)
                 .claim("username", username) // "username" 클레임을 설정
                 .claim("role", role) // "role" 클레임을 설정
                 .issuedAt(new Date(System.currentTimeMillis())) // 현재 시간을 발행 시간으로 설정
@@ -85,5 +86,12 @@ import java.util.Date;
                 .getPayload()
                 .getExpiration() // 만료 시간을 가져옴.
                 .before(new Date()); // 현재 시간과 비교하여 만료 여부를 반환
+    }
+
+    /**
+     *  JWT에서 access 및 refresh 토큰 여부 검증
+     */
+    public String getCategory(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
     }
 }
