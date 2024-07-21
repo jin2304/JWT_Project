@@ -52,6 +52,6 @@ public class ReissueService {
     public String createNewAccessToken(String refresh) {
         String username = jwtUtil.getUsername(refresh);
         String role = jwtUtil.getRole(refresh);
-        return jwtUtil.createJwt("access", username, role, 60*60*24L);
+        return jwtUtil.createJwt("access", username, role, 10*60*1000L); //유효 시간: 10분(10 * 60 * 1초)
     }
 }
