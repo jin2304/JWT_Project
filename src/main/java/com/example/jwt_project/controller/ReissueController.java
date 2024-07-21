@@ -23,16 +23,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
  *   - 서진영(jin2304)
  *
  * 코드 설명:
- *   - ReissueController는 refresh 토큰을 통해 access 토큰과 refresh 토큰 재발급을 처리하는 컨트롤러.
- *   - /reissue 엔드포인트에서 refresh 토큰을 검증하고 새로운 access 토큰을 발급.
+ *   - ReissueController는 refresh 토큰을 통해 새로운 access 토큰과 refresh 토큰 재발급을 처리하는 컨트롤러.
  *   - refresh 토큰을 쿠키에서 가져와 유효성 검사.
  *   - refresh 토큰이 유효한 경우, 새로운 access 토큰과 refresh 토큰을 생성하여 각각 응답 헤더와 응답 쿠키에 설정.
  *
  * 코드 주요 기능:
- *   - /reissue 엔드포인트를 처리하며, refresh 토큰을 검증하고, 새로운 access 토큰, refresh 토큰을 발급.
+ *   - /reissue 엔드포인트를 처리하며, refresh 토큰을 검증하고, 새로운 access 토큰과 refresh 토큰을 발급.
  *
  * 코드 작성일:
- *   - 2024.07.21 ~ 2024.07.21
+ *   - 2024.07.21 ~ 2024.07.22
  */
 @Controller
 @ResponseBody
@@ -63,23 +62,18 @@ public class ReissueController {
 
         // refresh 토큰 유효성 검사
         try {
-            refresh = reissueService.validateToken(refresh);
+            String[] tokens = reissueService.reissueTokens(refresh);
+            String newAccess = tokens[0];
+            String newRefresh = tokens[1];
+
+            // 응답헤더에 새로 발급된 access 토큰, 응답쿠키에 새로 발급된 refresh 토큰 설정
+            response.setHeader("access", newAccess);
+            response.addCookie(createCookie("refresh", newRefresh));
+            return new ResponseEntity<>(HttpStatus.OK);
+
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-
-
-        //refresh 토큰이 유효한 경우, 새로운 Access 토큰과 Refresh 토큰 생성
-        String newAccess = reissueService.createNewAccessToken(refresh);
-        String newRefresh = reissueService.createNewRefreshToken(refresh);
-
-
-        // 응답헤더에 새로 발급된 access 토큰 설정
-        response.setHeader("access", newAccess);
-        // 응답쿠키에 새로 발급된 refresh 토큰 설정
-        response.addCookie(createCookie("refresh", newRefresh));
-        
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 

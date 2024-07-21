@@ -1,11 +1,14 @@
 package com.example.jwt_project.jwt;
 
 
+import com.example.jwt_project.entity.RefreshEntity;
+import com.example.jwt_project.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +18,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -29,19 +33,19 @@ import java.util.Iterator;
  * -successfulAuthentication(): 로그인 성공 시 JWT를 생성하여 응답 헤더에 추가.
  * -unsuccessfulAuthentication(): 로그인 실패 시 401 응답 코드를 반환.
  *
- * 코드 작성일: 2024.07.16 ~ 2024.07.20
+ * 코드 작성일: 2024.07.16 ~ 2024.07.22
  */
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshRepository = refreshRepository;
     }
-
-
 
     /**
      * 사용자의 로그인 인증 처리
@@ -80,6 +84,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String access = jwtUtil.createJwt("access", username, role, 10*60*1000L);      //유효 시간: 10분(10 * 60 * 1초)
         String refresh = jwtUtil.createJwt("refresh", username, role, 24*60*60*1000L); //유효 시간: 24시간(24 * 60 * 60 * 1초)
 
+        //Refresh 토큰을 DB에 저장
+        saveRefreshEntity(username, refresh, 24*60*60*1000L);
+
         //응답 헤더에 JWT 추가
         response.setHeader("access", access);
         response.addCookie(createCookie("refresh", refresh));
@@ -111,4 +118,20 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         return cookie;
     }
+
+
+    /**
+     *  DB에 refresh 토큰 저장 메서드
+     */
+    private void saveRefreshEntity(String username, String refresh, Long expiredMs) {
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshEntity refreshEntity = new RefreshEntity();
+        refreshEntity.setUsername(username);
+        refreshEntity.setRefresh(refresh);
+        refreshEntity.setExpiration(date.toString());
+
+        refreshRepository.save(refreshEntity);
+    }
+
 }

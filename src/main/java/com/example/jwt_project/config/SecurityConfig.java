@@ -3,6 +3,8 @@ package com.example.jwt_project.config;
 import com.example.jwt_project.jwt.JWTFilter;
 import com.example.jwt_project.jwt.JWTUtil;
 import com.example.jwt_project.jwt.LoginFilter;
+import com.example.jwt_project.repository.RefreshRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,11 +23,15 @@ public class SecurityConfig {
     //AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
+    @Autowired
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
+        this.refreshRepository = refreshRepository;
     }
+
 
 
     //AuthenticationManager Bean 등록
@@ -69,7 +75,7 @@ public class SecurityConfig {
         //LoginFilter 등록
         //로그인 필터는 authenticationManager 객체가 필요, authenticationManager 객체는 authenticationConfiguration 객체가 필요
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
 
         //세션 설정 (무상태 설정)
         http
