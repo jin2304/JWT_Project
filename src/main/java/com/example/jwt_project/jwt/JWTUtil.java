@@ -1,5 +1,7 @@
 package com.example.jwt_project.jwt;
 
+import com.example.jwt_project.repository.RefreshRepository;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -13,9 +15,9 @@ import java.util.Date;
 /**
  * JWTUti 클래스
  * 코드 작성자: 서진영(jin2304)
- * 코드 설명: JWTUtil 클래스는 JWT(JSON Web Token)의 생성, 검증, 파싱을 위한 유틸리티 메서드를 제공함.
- * 코드 주요 기능: JWT 생성, JWT 검증(사용자 이름 추출 검증, 사용자 역할 추출 검증, 만료 여부 검증, access 및 refresh 토큰 여부 검증)
- * 코드 작성일: 2024.07.17 ~ 2024.07.20
+ * 코드 설명: JWTUtil 클래스는 JWT(JSON Web Token)의 생성, 검증, 파싱, 유효성 검사를 위한 유틸리티 메서드를 제공함.
+ * 코드 주요 기능: JWT 생성, JWT 검증(사용자 이름 추출 검증, 사용자 역할 추출 검증, 만료 여부 검증, access 및 refresh 토큰 여부 검증), refresh 토큰 유효성 검사
+ * 코드 작성일: 2024.07.17 ~ 2024.07.22
  *
  */
 
@@ -23,12 +25,14 @@ import java.util.Date;
  public class JWTUtil {
 
     private SecretKey secretKey;
+    private final RefreshRepository refreshRepository;
 
 
-    public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
+    public JWTUtil(@Value("${spring.jwt.secret}")String secret, RefreshRepository refreshRepository) {
         //주입된 secret 값을 사용하여 SecretKey 객체를 생성
         //secretKey = new SecretKeySpec(secret.getBytes(인코딩 방식), 서명 알고리즘);
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+        this.refreshRepository = refreshRepository;
     }
 
     /**
@@ -93,5 +97,39 @@ import java.util.Date;
      */
     public String getCategory(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+    }
+
+
+    /**
+     *  refresh 토큰의 유효성 검사 메서드
+     */
+    public String validateToken(String refresh) {
+
+        //refresh 토큰이 빈값인지 확인
+        if (refresh == null) {
+            throw new IllegalArgumentException("refresh token null");
+        }
+
+        //refresh 토큰 만료시간 확인
+        try {
+            isExpired(refresh);
+        } catch (ExpiredJwtException e) {
+            throw new IllegalArgumentException("refresh token expired");
+        }
+
+        //refresh 토큰인지 확인 (발급시 페이로드에 명시)
+        String category = getCategory(refresh);
+        if (!category.equals("refresh")) {
+            throw new IllegalArgumentException("invalid refresh token");
+        }
+
+        //DB에 저장되어 있는지 확인
+        Boolean isExist = refreshRepository.existsByRefresh(refresh);
+        if (!isExist) {
+            throw new IllegalArgumentException("invalid refresh token");
+        }
+
+        //refresh 토큰이 유효한 경우 반환
+        return refresh;
     }
 }

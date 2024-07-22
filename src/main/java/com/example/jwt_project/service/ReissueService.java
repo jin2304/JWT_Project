@@ -4,7 +4,6 @@ package com.example.jwt_project.service;
 import com.example.jwt_project.entity.RefreshEntity;
 import com.example.jwt_project.jwt.JWTUtil;
 import com.example.jwt_project.repository.RefreshRepository;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +13,7 @@ import java.util.Date;
 public class ReissueService {
 
     private final JWTUtil jwtUtil;
-    public final RefreshRepository refreshRepository;
+    private final RefreshRepository refreshRepository;
 
     @Autowired
     public ReissueService(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
@@ -29,7 +28,7 @@ public class ReissueService {
      */
     public String[] reissueTokens(String refresh) {
         // refresh 토큰 유효성 검사
-        refresh = validateToken(refresh);
+        refresh = jwtUtil.validateToken(refresh);
 
         // 토큰이 유효한 경우
         String username = jwtUtil.getUsername(refresh);
@@ -46,39 +45,6 @@ public class ReissueService {
         return new String[]{newAccess, newRefresh};
     }
 
-
-    /**
-     *  refresh 토큰의 유효성 검사 메서드
-     */
-    public String validateToken(String refresh) {
-
-        //refresh 토큰이 빈값인지 확인
-        if (refresh == null) {
-            throw new IllegalArgumentException("refresh token null");
-        }
-
-        //refresh 토큰 만료시간 확인
-        try {
-            jwtUtil.isExpired(refresh);
-        } catch (ExpiredJwtException e) {
-            throw new IllegalArgumentException("refresh token expired");
-        }
-
-        //refresh 토큰인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-        if (!category.equals("refresh")) {
-            throw new IllegalArgumentException("invalid refresh token");
-        }
-
-        //DB에 저장되어 있는지 확인
-        Boolean isExist = refreshRepository.existsByRefresh(refresh);
-        if (!isExist) {
-            throw new IllegalArgumentException("invalid refresh token");
-        }
-
-        //refresh 토큰이 유효한 경우 반환
-        return refresh;
-    }
 
 
     /**
