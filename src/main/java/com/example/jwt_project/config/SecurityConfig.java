@@ -1,5 +1,6 @@
 package com.example.jwt_project.config;
 
+import com.example.jwt_project.jwt.CustomLogoutFilter;
 import com.example.jwt_project.jwt.JWTFilter;
 import com.example.jwt_project.jwt.JWTUtil;
 import com.example.jwt_project.jwt.LoginFilter;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -76,6 +78,10 @@ public class SecurityConfig {
         //로그인 필터는 authenticationManager 객체가 필요, authenticationManager 객체는 authenticationConfiguration 객체가 필요
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
+
+        //CustomLogoutFilter 등록
+        http
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class);
 
         //세션 설정 (무상태 설정)
         http
