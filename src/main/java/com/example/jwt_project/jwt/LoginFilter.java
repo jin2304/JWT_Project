@@ -1,9 +1,12 @@
 package com.example.jwt_project.jwt;
 
 
+import com.example.jwt_project.dto.LoginDTO;
 import com.example.jwt_project.entity.RefreshEntity;
 import com.example.jwt_project.repository.RefreshRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +19,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -52,9 +58,29 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
      */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException  {
+
+        // 1) Form-data 로그인 방식
         //클라이언트 요청에서 username, password 추출
-        String username = obtainUsername(request);
-        String password = obtainPassword(request);
+        //String username = obtainUsername(request);
+        //String password = obtainPassword(request);
+
+
+        // 2) Json 로그인 방식
+        LoginDTO loginDTO = new LoginDTO();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();  // ObjectMapper: Jackson 라이브러리로, 이를 사용하여 JSON 형식의 데이터를 Java 객체로 변환
+            ServletInputStream inputStream = request.getInputStream();   // 클라이언트 요청 본문(body)을 읽기 위해 InputStream 가져오기
+            String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);  // InputStream을 문자열로 변환 (UTF-8 인코딩 사용)
+            loginDTO = objectMapper.readValue(messageBody, LoginDTO.class);  // JSON 형식의 문자열(messageBody)을 LoginDTO 객체로 변환
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println(loginDTO.getUsername());
+
+        String username = loginDTO.getUsername();
+        String password = loginDTO.getPassword();
 
         //스프링 시큐리티에서 username과 password를 검증하기 위해서는 token에 담아야 함
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
