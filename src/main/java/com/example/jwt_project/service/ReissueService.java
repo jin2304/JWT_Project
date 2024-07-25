@@ -1,7 +1,7 @@
 package com.example.jwt_project.service;
 
 
-import com.example.jwt_project.entity.RefreshEntity;
+import com.example.jwt_project.document.Refresh;
 import com.example.jwt_project.jwt.JWTUtil;
 import com.example.jwt_project.repository.RefreshRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,12 +53,12 @@ public class ReissueService {
     private void saveRefreshEntity(String username, String refresh, Long expiredMs) {
         Date date = new Date(System.currentTimeMillis() + expiredMs);
 
-        RefreshEntity refreshEntity = new RefreshEntity();
-        refreshEntity.setUsername(username);
-        refreshEntity.setRefresh(refresh);
-        refreshEntity.setExpiration(date.toString());
+        Refresh refreshDocument = new Refresh();
+        refreshDocument.setUsername(username);
+        refreshDocument.setRefresh(refresh);
+        refreshDocument.setExpiration(date.toString());
 
-        refreshRepository.save(refreshEntity);
+        refreshRepository.save(refreshDocument);
     }
 
 

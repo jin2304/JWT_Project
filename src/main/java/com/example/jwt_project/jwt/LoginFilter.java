@@ -1,8 +1,8 @@
 package com.example.jwt_project.jwt;
 
 
+import com.example.jwt_project.document.Refresh;
 import com.example.jwt_project.dto.LoginDTO;
-import com.example.jwt_project.entity.RefreshEntity;
 import com.example.jwt_project.repository.RefreshRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -11,7 +11,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -152,12 +151,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private void saveRefreshEntity(String username, String refresh, Long expiredMs) {
         Date date = new Date(System.currentTimeMillis() + expiredMs);
 
-        RefreshEntity refreshEntity = new RefreshEntity();
-        refreshEntity.setUsername(username);
-        refreshEntity.setRefresh(refresh);
-        refreshEntity.setExpiration(date.toString());
+        Refresh refreshDocument = new Refresh();
+        refreshDocument.setUsername(username);
+        refreshDocument.setRefresh(refresh);
+        refreshDocument.setExpiration(date.toString());
 
-        refreshRepository.save(refreshEntity);
+        refreshRepository.save(refreshDocument);
     }
 
 }

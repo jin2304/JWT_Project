@@ -1,10 +1,10 @@
 package com.example.jwt_project.repository;
 
-import com.example.jwt_project.entity.RefreshEntity;
-import jakarta.transaction.Transactional;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.jwt_project.document.Refresh;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface RefreshRepository extends JpaRepository<RefreshEntity, Long> {
+public interface RefreshRepository extends MongoRepository<Refresh, String> {
 
     //refresh 토큰 존재 여부 확인 메서드
     Boolean existsByRefresh(String refresh);
